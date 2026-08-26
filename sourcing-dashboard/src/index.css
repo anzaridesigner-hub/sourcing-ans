@@ -68,7 +68,9 @@ body {
   flex-direction: column;
   box-sizing: border-box;
 }
-
+.dashboard-upload.dashboard-loaded {
+    border-color: #059669;
+}
 h1,
 h2 {
   font-family: var(--heading);
@@ -170,6 +172,9 @@ body {
 .dashboard-upload:hover,
 .dashboard-copy:hover:not(:disabled) {
   background: #0c5961;
+  padding: 13px;
+  color: #fff;
+  border-radius: 8px;
 }
 
 .dashboard-loaded {

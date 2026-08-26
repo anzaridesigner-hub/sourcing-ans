@@ -1,3 +1,4 @@
+import Suppliers from './Suppliers';
 import React, { useEffect, useState } from 'react';
 import {
   BarChart3, Bell, Check, CheckCircle2, ChevronLeft, ChevronRight, ClipboardList,
@@ -24,23 +25,22 @@ const formatSuppliers = (data) => data.map((item, index) => ({
   productName: String(item.PRODUCT || ''),
   address: String(item.ADDRESS || ''),
   contactNumber: String(item['CONTACT NO.'] || '')
+
 }));
 
 export default function SourcingDashboard() {
+  const [activeView, setActiveView] = useState('dashboard');
+  const [page, setPage] = useState(1);
   const [suppliers, setSuppliers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState(null);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [selectedIds, setSelectedIds] = useState(() => new Set());
   const [contactsCopied, setContactsCopied] = useState(false);
-  const [page, setPage] = useState(1);
+  const [visibleColumns, setVisibleColumns] = useState(() => new Set(columnOptions.map((c) => c.key)));
   const [showFilters, setShowFilters] = useState(false);
-  const pageSize = 20;
-  const [visibleColumns, setVisibleColumns] = useState(
-    () => new Set(columnOptions.map((column) => column.key))
-  );
 
   const toggleColumn = (key) => {
     setVisibleColumns((currentColumns) => {
@@ -120,6 +120,7 @@ export default function SourcingDashboard() {
     item.contactNumber.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const [pageSize] = useState(20);
   const totalPages = Math.max(1, Math.ceil(filteredSuppliers.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const paginatedSuppliers = filteredSuppliers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
@@ -181,8 +182,14 @@ export default function SourcingDashboard() {
       <aside className="dashboard-sidebar hidden lg:flex">
         <div className="sidebar-brand"><span className="brand-mark"><Users size={18} /></span><span><b>Supplier Hub</b><small>Intelligent Workspace</small></span></div>
         <nav className="sidebar-nav">
-          {[['Dashboard', Home], ['Suppliers', Users], ['Contacts', ClipboardList], ['Tasks', Check], ['Follow Ups', Bell], ['Analytics', BarChart3], ['Settings', Settings]].map(([label, Icon], index) => (
-            <button key={label} className={`sidebar-link ${index === 0 ? 'active' : ''}`}><Icon size={16} />{label}</button>
+  {[['Dashboard', Home], ['Suppliers', Users], ['Contacts', ClipboardList], ['Tasks', Check], ['Follow Ups', Bell], ['Analytics', BarChart3], ['Settings', Settings]].map(([label, Icon]) => (
+    <button
+      key={label}
+      className={`sidebar-link ${activeView === label.toLowerCase() ? 'active' : ''}`}
+      onClick={() => setActiveView(label.toLowerCase())}
+    >
+              <Icon size={16} />{label}
+            </button>
           ))}
         </nav>
         <div className="smart-tip"><b>Smart Tip</b><span>Keep your supplier data up to date to build stronger relationships.</span><a>Learn More <ChevronRight size={13} /></a></div>
@@ -190,9 +197,14 @@ export default function SourcingDashboard() {
         <div className="sidebar-user"><span>MA</span><div><b>Mohamed Thameem Ansari</b><small>Administrator</small></div><ChevronRight size={14} /></div>
       </aside>
       <main className="dashboard-main dashboard-content p-4 md:p-7">
+          {activeView === 'suppliers' ? (
+            <Suppliers />
+          ) : (
+            <>
+              {/* existing header, metrics, table, ellam idhu ulla wrap pannunga */}
         <header className="dashboard-topbar">
-          <div><p className="welcome-line">Welcome back, Mohamed Thameem Ansari! <span>👋</span></p><h1>Sourcing & Supplier Dashboard</h1><p>Find the right supplier faster, then share a clean contact list with your team.</p></div>
-          <div className="top-actions"><label className="dashboard-upload"><Upload size={15} /> Import/Replace Excel<input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} className="hidden" /></label>{uploadSuccess && <span className="dashboard-loaded"><CheckCircle2 size={15} /> Loaded ({suppliers.length})</span>}<button className="mobile-menu"><Menu size={18} /></button></div>
+          <div><p className="welcome-line">Welcome back, Mr. Mohamed Thameem Ansari! <span>👋</span></p><h1>Sourcing & Supplier Dashboard</h1><p>Find the right supplier faster, then share a clean contact list with your team.</p></div>
+          <div className="top-actions"><label className="dashboard-loaded dashboard-upload"><Upload size={15} /> Import/Replace Excel<input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} className="hidden" /></label>{uploadSuccess && <span className="dashboard-loaded"><CheckCircle2 size={15} /> Loaded ({suppliers.length})</span>}<button className="mobile-menu"><Menu size={18} /></button></div>
         </header>
         <section className="metrics-grid">
           {[[Users, 'Total Suppliers', suppliers.length || 0, 'All suppliers in list', 'teal'], [Eye, 'Visible Suppliers', filteredSuppliers.length, 'Currently showing', 'blue'], [Globe2, 'Countries', '18', 'Global coverage', 'purple'], [Tag, 'Categories', '32', 'Product categories', 'orange']].map(([Icon, label, value, sub, color]) => <div className={`metric-card ${color}`} key={label}><div><span>{label}</span><strong>{value}</strong><small>{sub}</small></div><Icon size={25} /></div>)}
@@ -256,7 +268,9 @@ export default function SourcingDashboard() {
                 )}
               </tbody></table></div><div className="table-footer"><span>Showing {filteredSuppliers.length ? (currentPage - 1) * pageSize + 1 : 0} to {Math.min(currentPage * pageSize, filteredSuppliers.length)} of {filteredSuppliers.length} suppliers</span><div className="pagination"><button disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}><ChevronLeft size={14} /></button>{Array.from({ length: Math.min(totalPages, 4) }, (_, index) => index + 1).map((number) => <button key={number} className={currentPage === number ? 'current' : ''} onClick={() => setPage(number)}>{number}</button>)}{totalPages > 4 && <span>...</span>}<button disabled={currentPage === totalPages} onClick={() => setPage(currentPage + 1)}><ChevronRight size={14} /></button><select value={pageSize} readOnly><option>20 / page</option></select></div></div></div>
         <section className="utility-grid"><div><ClipboardList size={25} /><b>Stay Organized</b><span>Use filters, tags, and follow-ups to never miss an opportunity.</span><a>Learn More <ChevronRight size={13} /></a></div><div><Bell size={25} /><b>Follow Ups</b><span>You have 05 pending follow-ups scheduled this week.</span><a>View Follow Ups <ChevronRight size={13} /></a></div><div><ShieldCheck size={25} /><b>Data Safe</b><span>Your supplier data is secure and backed up.</span><a>View Settings <ChevronRight size={13} /></a></div></section>
-      </main>
+          </>
+  )}
+</main>
     </div>
   );
 }
